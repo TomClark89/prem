@@ -1,3 +1,5 @@
+import time
+import re
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -24,25 +26,32 @@ def download_details(url,i):
     for event in home_events:
         trimmed_event = event.text.strip()
         event_len = len(trimmed_event)
-        player = trimmed_event[:event_len-3].strip()
-        goal_time = int(trimmed_event[event_len-3:][:2])
-        line_info = [i, home_name, away_name, player, home_name, goal_time]
-        print(line_info)
-        with open('results.csv', 'a', newline='') as myfile:
-            wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-            wr.writerow(line_info)
+        #print(trimmed_event)
+
+        player = re.search(r"[\w|\s]+\d", trimmed_event, flags=re.IGNORECASE).group().rstrip('1234567890 ')
+        goal_times = re.findall(r"\s+\d+", trimmed_event, flags=re.IGNORECASE)
+        for goal_time in goal_times:
+            #print (player, goal_time)
+            line_info = [i, home_name, away_name, player, home_name, goal_time]
+            print(line_info)
+            with open('results.csv', 'a', newline='') as myfile:
+                wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+                wr.writerow(line_info)
 
     for event in away_events:
         trimmed_event = event.text.strip()
         event_len = len(trimmed_event)
-        player = trimmed_event[:event_len-3].strip()
-        goal_time = int(trimmed_event[event_len-3:][:2])
-        line_info = [i, home_name, away_name, player, away_name, goal_time]
-        print(line_info)
-        with open('results.csv', 'a', newline='') as myfile:
-            wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-            wr.writerow(line_info)
+        #print(trimmed_event)
 
+        player = re.search(r"[\w|\s]+\d", trimmed_event, flags=re.IGNORECASE).group().rstrip('1234567890 ')
+        goal_times = re.findall(r"\s+\d+", trimmed_event, flags=re.IGNORECASE)
+        for goal_time in goal_times:
+            #print (player, goal_time)
+            line_info = [i, home_name, away_name, player, away_name, int(goal_time.strip())]
+            print(line_info)
+            with open('results.csv', 'a', newline='') as myfile:
+                wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+                wr.writerow(line_info)
         # img_location = image_cell.img['src']
         # med_location = img_location.upper().find("/MED/")
         # img_location = img_location[:med_location] + "/LRG/" + img_location[med_location+5:]
@@ -51,6 +60,8 @@ def download_details(url,i):
         # print (str(j).rjust(2) + ": " + file_name)
         # urllib.request.urlretrieve(img_location,"downloaded_images/" + file_name)
 #original URL had a limit on age
+start_time = time.time()
+
 row_headers = ['MatchID','HomeTeam','AwayTeam','Scorer', 'ScoredFor','Time']
 
 with open('results.csv', 'w', newline='') as myfile:
@@ -58,8 +69,15 @@ with open('results.csv', 'w', newline='') as myfile:
     wr.writerow(row_headers)
 print (row_headers)
 
-for i in range(3, 4):
+for i in range(1, 101):
     url = 'https://www.premierleague.com/match/'
-    print(url)
     #print ("Page " + str(i))
     download_details(url,i)
+
+end_time = time.time()
+
+elapsed_seconds = int(end_time-start_time)
+elapsed_mins = int(elapsed_seconds/60)
+
+print ("total mins: " + str(elapsed_mins))
+print ("total seconds: " + str(elapsed_seconds))
